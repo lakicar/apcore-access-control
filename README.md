@@ -50,13 +50,17 @@ Permissions are linked to `client_user`, not directly to `user_account`. This al
 
 ## Business Logic
 
+### Company Registration Rule
+
+Only the first registered user of a company can create the company profile and become the company administrator. If a company with the same Tax ID or Registration Number already exists, the system blocks duplicate company registration. Additional users must be created by the existing company administrator.
+
 ### Company Registration
 
 `POST /api/registration/company`
 
 Flow:
 
-- checks whether `client.tax_id` already exists
+- checks whether `client.tax_id` or `client.registration_number` already exists
 - creates a `client`
 - creates a `user_account`
 - creates a `client_user` with `role_code = OWNER`

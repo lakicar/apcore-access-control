@@ -24,6 +24,10 @@ import java.util.List;
 @Service
 public class RegistrationService {
 
+    private static final String DUPLICATE_COMPANY_MESSAGE = "Company already exists in the system. "
+            + "You cannot create another company profile with the same Tax ID or Registration Number. "
+            + "If you work for this company, please contact your company administrator to create your user account.";
+
     private static final List<String> OWNER_PERMISSIONS = List.of(
             "CREATE_USER",
             "UPDATE_USER",
@@ -56,14 +60,17 @@ public class RegistrationService {
 
     @Transactional
     public CompanyRegistrationResponse registerCompany(CompanyRegistrationRequest request) {
-        if (clientRepository.existsByTaxId(request.client().taxId())) {
-            throw new BusinessException(HttpStatus.CONFLICT, "Firma sa unetim tax_id vec postoji.");
+        if (clientRepository.existsByTaxIdOrRegistrationNumber(
+                request.client().taxId(),
+                request.client().registrationNumber()
+        )) {
+            throw new BusinessException(HttpStatus.CONFLICT, DUPLICATE_COMPANY_MESSAGE);
         }
         if (userAccountRepository.existsByUsername(request.owner().username())) {
-            throw new BusinessException(HttpStatus.CONFLICT, "Username vec postoji.");
+            throw new BusinessException(HttpStatus.CONFLICT, "Username already exists.");
         }
         if (userAccountRepository.findByEmail(request.owner().email()).isPresent()) {
-            throw new BusinessException(HttpStatus.CONFLICT, "Email vec postoji.");
+            throw new BusinessException(HttpStatus.CONFLICT, "Email already exists.");
         }
 
         Client client = clientRepository.save(toClient(request.client()));
