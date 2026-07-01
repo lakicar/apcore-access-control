@@ -27,6 +27,12 @@ public class RegistrationService {
     private static final String DUPLICATE_COMPANY_MESSAGE = "Company already exists in the system. "
             + "You cannot create another company profile with the same Tax ID or Registration Number. "
             + "If you work for this company, please contact your company administrator to create your user account.";
+    private static final String DUPLICATE_EMAIL_MESSAGE =
+            "Email address is already in use. Please use another email address.";
+    private static final String DUPLICATE_USERNAME_MESSAGE =
+            "Username is already in use. Please choose another username.";
+    private static final String DUPLICATE_PHONE_MESSAGE =
+            "Phone number is already in use. Please use another phone number.";
 
     private static final List<String> OWNER_PERMISSIONS = List.of(
             "CREATE_USER",
@@ -66,11 +72,15 @@ public class RegistrationService {
         )) {
             throw new BusinessException(HttpStatus.CONFLICT, DUPLICATE_COMPANY_MESSAGE);
         }
-        if (userAccountRepository.existsByUsername(request.owner().username())) {
-            throw new BusinessException(HttpStatus.CONFLICT, "Username already exists.");
+        if (userAccountRepository.existsByEmail(request.owner().email())) {
+            throw new BusinessException(HttpStatus.CONFLICT, DUPLICATE_EMAIL_MESSAGE);
         }
-        if (userAccountRepository.findByEmail(request.owner().email()).isPresent()) {
-            throw new BusinessException(HttpStatus.CONFLICT, "Email already exists.");
+        if (userAccountRepository.existsByUsername(request.owner().username())) {
+            throw new BusinessException(HttpStatus.CONFLICT, DUPLICATE_USERNAME_MESSAGE);
+        }
+        String ownerPhone = request.owner().phone();
+        if (ownerPhone != null && !ownerPhone.isBlank() && userAccountRepository.existsByPhone(ownerPhone)) {
+            throw new BusinessException(HttpStatus.CONFLICT, DUPLICATE_PHONE_MESSAGE);
         }
 
         Client client = clientRepository.save(toClient(request.client()));
